@@ -1,6 +1,7 @@
 // TODO: deny missing docs
 // TODO: stable
 // TODO: with fork
+// TODO: fix Errors in Tower Web
 
 #[macro_use(try_ready)] extern crate futures;
 
@@ -35,10 +36,5 @@ pub mod extractors;
 pub mod middleware;
 pub mod types;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub use types::Proto;
+pub use middleware::ProtobufMiddleware;

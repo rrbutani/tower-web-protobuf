@@ -1,12 +1,13 @@
 use crate::common::*;
 use crate::extensions::MessageParseStrategy;
 
+#[derive(Debug, Copy, Clone)]
 /// Configuration options for a [`ProtobufService`](struct.ProtobufService.html).
 pub struct Config {
     /// Allow incoming Protobuf messages to be sent as [protobuf-compliant JSON](https://developers.google.com/protocol-buffers/docs/proto3#json).
     pub receive_json: bool,
     /// Allow outgoing Protobuf messages to be sent as [protobuf-compliant JSON](https://developers.google.com/protocol-buffers/docs/proto3#json).
-    pub send_json: bool,
+    pub send_json: bool, // TODO: use
 }
 
 /// Decorates another Service by parsing incoming Protobuf messages and
@@ -55,14 +56,14 @@ fn parse_headers<T>(request: &HttpRequest<T>, header: HeaderName) -> (bool, bool
     (json, proto)
 }
 
-impl<S, ReqBody, RespBody> Service<HttpRequest<ReqBody>> for ProtobufService<S>
+impl<S, ReqBody, RespBody> Service for ProtobufService<S>
 where
-    S: Service<HttpRequest<ReqBody>,
+    S: Service<Request = HttpRequest<ReqBody>,
                Response = HttpResponse<RespBody>>,
     S::Future: Future<Item = HttpResponse<RespBody>>,
     S::Error: ::std::error::Error,
 {
-    // type Request = S::Request; // HttpRequest<ReqBody>
+    type Request = S::Request; // HttpRequest<ReqBody>
     type Response = S::Response;
     type Error = S::Error;
     type Future = ResponseFuture<S::Future>;
@@ -77,7 +78,7 @@ where
 
 
         let (json, proto) = parse_headers(&request, CONTENT_TYPE);
-        let json = json && self.config.receiveJson;
+        let json = json && self.config.receive_json;
 
         let extensions = request.extensions_mut();
 

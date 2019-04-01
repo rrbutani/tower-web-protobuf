@@ -8,4 +8,5 @@ mod middleware;
 mod service;
 
 // pub use self::middleware::ProtobufMiddleware;
-pub use self::service::ProtobufService;
+pub use self::service::{Config, ProtobufService};
+pub use self::middleware::ProtobufMiddleware;

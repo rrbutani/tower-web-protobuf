@@ -110,6 +110,7 @@ impl<B: BufStream, M: MessagePlus> ExtractFuture for MessageFuture<B, M> {
             }
         };
 
+
         match msg_res {
             Ok(msg) => {
                 self.message = Some(msg);

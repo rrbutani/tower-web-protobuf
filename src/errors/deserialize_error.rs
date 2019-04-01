@@ -66,9 +66,7 @@ impl From<&DeserializeError> for String {
 impl Display for DeserializeError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), Error> {
         let s = String::from(self);
-        fmt.write_str(s.as_str());
-
-        Ok(())
+        fmt.write_str(s.as_str())
     }
 }
 

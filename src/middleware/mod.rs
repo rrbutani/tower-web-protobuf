@@ -2,4 +2,4 @@
 
 pub mod protobuf;
 
-pub use protobuf::ProtobufService;
+pub use protobuf::ProtobufMiddleware;
