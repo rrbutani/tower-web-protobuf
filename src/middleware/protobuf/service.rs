@@ -1,13 +1,12 @@
-use middleware::*;
-
-use extensions::MessageParseStrategy;
+use crate::common::*;
+use crate::extensions::MessageParseStrategy;
 
 /// Configuration options for a [`ProtobufService`](struct.ProtobufService.html).
 pub struct Config {
     /// Allow incoming Protobuf messages to be sent as [protobuf-compliant JSON](https://developers.google.com/protocol-buffers/docs/proto3#json).
-    pub receiveJson: bool,
+    pub receive_json: bool,
     /// Allow outgoing Protobuf messages to be sent as [protobuf-compliant JSON](https://developers.google.com/protocol-buffers/docs/proto3#json).
-    pub sendJson: bool,
+    pub send_json: bool,
 }
 
 /// Decorates another Service by parsing incoming Protobuf messages and
@@ -25,23 +24,19 @@ pub struct ProtobufService<S> {
     config: Config,
 }
 
-pub struct ResponseFuture<T>
-{
-    response: T,
-}
-
 impl<S> ProtobufService<S> {
     pub(super) fn new(inner: S, config: Config) -> ProtobufService<S> {
         ProtobufService { inner, config }
     }
 }
 
-fn parse_headers<T>(request: HttpRequest<T>, header: HeaderName) -> (bool, bool) {
+fn parse_headers<T>(request: &HttpRequest<T>, header: HeaderName) -> (bool, bool) {
     let content_type_headers = request.headers().get_all(header);
 
     // We're going to be strict about having the right header for JSON:
     let json = content_type_headers.iter()
         .any(|h| h == &"application/json");
+
     // But somewhat lenient for Protobufs since there isn't an official
     // thing. We'll take: "application/[x-]protobuf[; <message type>]".
     let proto = content_type_headers.iter().any(|h| {
@@ -52,17 +47,22 @@ fn parse_headers<T>(request: HttpRequest<T>, header: HeaderName) -> (bool, bool)
         }
     });
 
+    // Note: for now we disregard message tpes in the content-type header, but
+    // in the future we should ensure that this matches the type for the
+    // endpoint we're hitting (TODO). This is a little tricky since we don't
+    // have access to that information here.
+
     (json, proto)
 }
 
-impl<S, ReqBody, RespBody> Service for ProtobufService<S>
+impl<S, ReqBody, RespBody> Service<HttpRequest<ReqBody>> for ProtobufService<S>
 where
-    S: Service<Request = HttpRequest<ReqBody>,
+    S: Service<HttpRequest<ReqBody>,
                Response = HttpResponse<RespBody>>,
     S::Future: Future<Item = HttpResponse<RespBody>>,
     S::Error: ::std::error::Error,
 {
-    type Request = S::Request;
+    // type Request = S::Request; // HttpRequest<ReqBody>
     type Response = S::Response;
     type Error = S::Error;
     type Future = ResponseFuture<S::Future>;
@@ -71,11 +71,12 @@ where
         self.inner.poll_ready()
     }
 
-    /// Modifies the request's headers to signal to the Extractor what to do
-    fn call(&mut self, request: Self::Request) -> Self::Future {
+    /// Modifies the request's headers to signal to the Extractor what to do.
+    fn call(&mut self, mut request: HttpRequest<ReqBody>) -> Self::Future {
         use http::header::CONTENT_TYPE;
 
-        let (json, proto) = parse_headers(request, CONTENT_TYPE);
+
+        let (json, proto) = parse_headers(&request, CONTENT_TYPE);
         let json = json && self.config.receiveJson;
 
         let extensions = request.extensions_mut();
@@ -87,6 +88,11 @@ where
             (false, false) => {None},
         }).is_some();
 
+        // We're using extensions to record what the Extractor should do; this
+        // is a little janky but it should be fine. This check should warn us
+        // if somehow we overwrite a value already in extensions.
+        //
+        // TODO: this should use log as be marked as a warning
         if exists { println!("eek! we've been made!!"); }
 
         // TODO:
@@ -95,21 +101,3 @@ where
         }
     }
 }
-
-impl<F, RespBody> Future for ResponseFuture<F>
-where
-    F: Future<Item = HttpResponse<RespBody>>
-{
-    type Item = F::Item;
-    type Error = F::Error;
-
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        use Async::*;
-
-        let response = try_ready!(self.response.poll());
-
-
-        Ok(Ready(response))
-    }
-}
-
