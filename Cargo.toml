@@ -6,7 +6,8 @@ edition = "2018"
 
 [dependencies]
 tower-web = "0.3.6"
-tower-service = "0.2.0"
+tower-service = "0.1.0"
+# tower-service = "0.2.0"
 tokio = "0.1.18"
 serde = "1.0.89"
 futures = "0.1.25"
