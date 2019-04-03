@@ -2,4 +2,4 @@
 
 mod proto_types;
 
-pub use self::proto_types::{Proto, MessagePlus};
+pub use self::proto_types::{MessagePlus, Proto};

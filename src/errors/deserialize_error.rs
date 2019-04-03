@@ -1,8 +1,7 @@
-
-use std::fmt::{Error, Display};
 use crate::common::*;
-use tower_web::error::IntoCatch; // TODO
+use std::fmt::{Display, Error};
 use tower_web::error::Catch;
+use tower_web::error::IntoCatch; // TODO
 use tower_web::Error as TowerError;
 
 #[derive(Clone, Debug)]
@@ -22,22 +21,31 @@ pub enum DeserializeErrorKind {
 #[derive(Clone, Debug)]
 pub struct DeserializeError {
     kind: DeserializeErrorKind,
-    err_message: Option<String>
+    err_message: Option<String>,
 }
 
 impl DeserializeError {
     #[allow(dead_code)]
     pub(crate) fn new(kind: DeserializeErrorKind) -> Self {
-        Self { kind, err_message: None }
+        Self {
+            kind,
+            err_message: None,
+        }
     }
 
     #[allow(dead_code)]
     pub(crate) fn new_with_message(kind: DeserializeErrorKind, message: String) -> Self {
-        Self { kind, err_message: Some(message) }
+        Self {
+            kind,
+            err_message: Some(message),
+        }
     }
 
     pub(crate) fn new_with_error<T: Display>(kind: DeserializeErrorKind, err: T) -> Self {
-        Self { kind, err_message: Some(format!("{}", err)) }
+        Self {
+            kind,
+            err_message: Some(format!("{}", err)),
+        }
     }
 
     pub(crate) fn get_code_and_message(&self) -> (u16, String) {
@@ -53,10 +61,12 @@ impl DeserializeError {
 
         let msg = if let Some(ref err) = self.err_message {
             let mut e = String::from(msg);
-                e.push_str("; ");
-                e.push_str(err.as_str());
-                e
-        } else { String::from(msg) };
+            e.push_str("; ");
+            e.push_str(err.as_str());
+            e
+        } else {
+            String::from(msg)
+        };
 
         (status, msg)
     }

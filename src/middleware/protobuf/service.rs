@@ -31,30 +31,35 @@ impl<S> ProtobufService<S> {
     }
 }
 
-fn parse_headers<T>(request: &HttpRequest<T>, header: HeaderName, allow_json: bool) -> MessageStrategy {
+fn parse_headers<T>(
+    request: &HttpRequest<T>,
+    header: HeaderName,
+    allow_json: bool,
+) -> MessageStrategy {
     let content_type_headers = request.headers().get_all(header);
 
     // We're going to be strict about having the right header for JSON:
-    let json = content_type_headers.iter()
+    let json = content_type_headers
+        .iter()
         .any(|h| h == &"application/json");
 
     // But somewhat lenient for Protobufs since there isn't an official
     // thing. We'll take: "application/[x-]protobuf[; <message type>]".
-    let (proto, name) = content_type_headers.iter().filter_map(|h| {
-        match h.to_str() {
+    let (proto, name) = content_type_headers
+        .iter()
+        .filter_map(|h| match h.to_str() {
             Ok(x) => {
-                let p = x.starts_with("application/protobuf") ||
-                    x.starts_with("application/x-protobuf");
+                let p = x.starts_with("application/protobuf")
+                    || x.starts_with("application/x-protobuf");
 
-                let pair = (p, if p {
-                    x.split(";").next()
-                } else { None });
+                let pair = (p, if p { x.split(";").next() } else { None });
 
                 Some(pair)
-            },
-            _ => None
-        }
-    }).next().unwrap_or((false, None));
+            }
+            _ => None,
+        })
+        .next()
+        .unwrap_or((false, None));
 
     // TODO: a lot more error handling here. For example, specifying multiple content types or
     // multiple protobuf message types.
@@ -66,17 +71,16 @@ fn parse_headers<T>(request: &HttpRequest<T>, header: HeaderName, allow_json: bo
 
     use self::MessageStrategy::*;
     match (json && allow_json, proto, name) {
-        (_,     true, Some(name))  => { NamedProto(String::from(name)) },
-        (_,     true, None)        => { Proto },
-        (true,  false, _)          => { Json },
-        (false, false, _)          => { Plaintext }, // TODO: this should actually error
+        (_, true, Some(name)) => NamedProto(String::from(name)),
+        (_, true, None) => Proto,
+        (true, false, _) => Json,
+        (false, false, _) => Plaintext, // TODO: this should actually error
     }
 }
 
 impl<S, ReqBody, RespBody> Service for ProtobufService<S>
 where
-    S: Service<Request = HttpRequest<ReqBody>,
-               Response = HttpResponse<RespBody>>,
+    S: Service<Request = HttpRequest<ReqBody>, Response = HttpResponse<RespBody>>,
     S::Future: Future<Item = HttpResponse<RespBody>>,
     S::Error: ::std::error::Error,
 {
@@ -91,24 +95,26 @@ where
 
     /// Modifies the request's headers to signal to the Extractor what to do.
     fn call(&mut self, mut request: HttpRequest<ReqBody>) -> Self::Future {
-        use http::header::{CONTENT_TYPE, ACCEPT};
+        use http::header::{ACCEPT, CONTENT_TYPE};
 
         // Set MessageParseStrategy:
         let mps = parse_headers(&request, CONTENT_TYPE, self.config.receive_json).into();
-        request.extensions_mut()
+        request
+            .extensions_mut()
             .insert::<MessageParseStrategy>(mps)
             .map(|prev| {
-            // We're using extensions to record what the Extractor should do; this
-            // is a little janky but it should be fine. This check should warn us
-            // if somehow we overwrite a value already in extensions.
-            //
-            // TODO: this should use log as be marked as a warning
-            println!("eek! we've been made!! {:?}", prev)
-        });
+                // We're using extensions to record what the Extractor should do; this
+                // is a little janky but it should be fine. This check should warn us
+                // if somehow we overwrite a value already in extensions.
+                //
+                // TODO: this should use log as be marked as a warning
+                println!("eek! we've been made!! {:?}", prev)
+            });
 
         // And likewise for MessageEncodeStrategy:
         let mes = parse_headers(&request, ACCEPT, self.config.send_json).into();
-        request.extensions_mut()
+        request
+            .extensions_mut()
             .insert::<MessageEncodeStrategy>(mes)
             .map(|prev| println!("TODO: Re-inserting!! {:?}", prev));
 

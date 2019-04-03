@@ -1,22 +1,22 @@
-use std::ops::Deref;
 use std::io::Cursor;
+use std::ops::Deref;
 
-use bytes::BytesMut;
 use bytes::Bytes;
+use bytes::BytesMut;
 use http::status::StatusCode;
 use serde_json;
 use serde_plain;
-use tower_web::util::buf_stream::BufStream;
-use tower_web::response::Serializer;
 use tower_web::error::Error;
 use tower_web::response::Context;
 use tower_web::response::Response;
+use tower_web::response::Serializer;
+use tower_web::util::buf_stream::BufStream;
 
-use crate::types::Proto;
-use crate::types::MessagePlus;
+use crate::common::*;
 use crate::extensions::MessageEncodeStrategy;
 use crate::extensions::MessageStrategy;
-use crate::common::*;
+use crate::types::MessagePlus;
+use crate::types::Proto;
 
 // Let's make a newtype around Bytes:
 #[doc(hidden)]
@@ -51,7 +51,7 @@ impl BufStream for BytesWrapper {
         use std::mem;
 
         if self.is_empty() {
-            return Ok(None.into())
+            return Ok(None.into());
         }
 
         let bytes = mem::replace(self, BytesWrapper(Bytes::new()));
@@ -67,54 +67,69 @@ fn serialize_proto<M: MessagePlus>(message: &Proto<M>) -> Result<BytesMut, Error
 
     message
         .encode(&mut buf)
-        .map_err(|err|
-            Error::new(&format!("{}", err),
+        .map_err(|err| {
+            Error::new(
+                &format!("{}", err),
                 "Serialization Error: Insufficient Capacity",
-                StatusCode::INTERNAL_SERVER_ERROR))
+                StatusCode::INTERNAL_SERVER_ERROR,
+            )
+        })
         .map(|_| buf)
 }
 
-impl<M> Response for Proto<M> where M: MessagePlus {
+impl<M> Response for Proto<M>
+where
+    M: MessagePlus,
+{
     type Buf = Cursor<Bytes>;
     type Body = BytesWrapper;
 
-    fn into_http<S: Serializer>(self, context: &Context<S>) -> Result<HttpResponse<Self::Body>, Error> {
+    fn into_http<S: Serializer>(
+        self,
+        context: &Context<S>,
+    ) -> Result<HttpResponse<Self::Body>, Error> {
         use MessageStrategy::*;
 
-        let strat: MessageEncodeStrategy = context.request().extensions().get().map(|s: &MessageEncodeStrategy| s.clone()).unwrap_or_default();
+        let strat: MessageEncodeStrategy = context
+            .request()
+            .extensions()
+            .get()
+            .map(|s: &MessageEncodeStrategy| s.clone())
+            .unwrap_or_default();
         let buf = match *strat {
-            NamedProto(ref name)=> {
+            NamedProto(ref name) => {
                 // TODO: message name check
                 serialize_proto(&self)?
-            },
-            Proto => {
-                serialize_proto(&self)?
-            },
-            Json => {
-                serde_json::to_vec_pretty(&*self)
-                    .map(|vec| vec.into())
-                    .map_err(|err|
-                        Error::new(&format!("{}", err),
-                            "Serialization Error: serde_json",
-                            StatusCode::INTERNAL_SERVER_ERROR))?
-            },
-            Plaintext => {
-                serde_plain::to_string(&*self)
-                    .map(|str| str.into())
-                    .map_err(|err|
-                        Error::new(&format!("{}", err),
-                            "Serialization Error: serde_plain",
-                            StatusCode::INTERNAL_SERVER_ERROR))?
             }
+            Proto => serialize_proto(&self)?,
+            Json => serde_json::to_vec_pretty(&*self)
+                .map(|vec| vec.into())
+                .map_err(|err| {
+                    Error::new(
+                        &format!("{}", err),
+                        "Serialization Error: serde_json",
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                    )
+                })?,
+            Plaintext => serde_plain::to_string(&*self)
+                .map(|str| str.into())
+                .map_err(|err| {
+                    Error::new(
+                        &format!("{}", err),
+                        "Serialization Error: serde_plain",
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                    )
+                })?,
         };
 
         let buf = buf.freeze();
 
-        http::Response::builder()
-            .body(buf.into())
-            .map_err(|err|
-                Error::new(&format!("{}", err),
-                    "Response Builder Error",
-                    StatusCode::INTERNAL_SERVER_ERROR))
+        http::Response::builder().body(buf.into()).map_err(|err| {
+            Error::new(
+                &format!("{}", err),
+                "Response Builder Error",
+                StatusCode::INTERNAL_SERVER_ERROR,
+            )
+        })
     }
 }

@@ -1,11 +1,11 @@
 #[deny(missing_docs)]
-
-#[macro_use(try_ready)] extern crate futures;
+#[macro_use(try_ready)]
+extern crate futures;
 
 pub(crate) mod common {
+    pub use futures::future::{Err as FutErr, Future, FutureResult, Ok as FutOk};
     pub use futures::Poll;
-    pub use futures::future::{FutureResult, Future, Ok as FutOk, Err as FutErr};
-    pub use http::{Request as HttpRequest, Response as HttpResponse, header::HeaderName};
+    pub use http::{header::HeaderName, Request as HttpRequest, Response as HttpResponse};
     pub use tower_service::Service;
 
     pub struct ResponseFuture<T> {
@@ -14,7 +14,7 @@ pub(crate) mod common {
 
     impl<F, RespBody> Future for ResponseFuture<F>
     where
-        F: Future<Item = HttpResponse<RespBody>>
+        F: Future<Item = HttpResponse<RespBody>>,
     {
         type Item = F::Item;
         type Error = F::Error;
@@ -33,8 +33,8 @@ pub mod middleware;
 pub mod response;
 pub mod types;
 
-pub use types::Proto;
 pub use middleware::ProtobufMiddleware;
+pub use types::Proto;
 
 // TODO: deny missing docs
 // TODO: check protobuf message name with type_info (feature gated, perhaps)

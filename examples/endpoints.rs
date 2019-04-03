@@ -1,7 +1,8 @@
-#[macro_use] extern crate tower_web;
+#[macro_use]
+extern crate tower_web;
+extern crate http;
 extern crate tokio;
 extern crate tower_service;
-extern crate http;
 
 extern crate prost;
 
@@ -37,7 +38,6 @@ impl_web! {
         }
     }
 }
-
 
 pub fn main() {
     let addr = "127.0.0.1:8080".parse().expect("Invalid address");

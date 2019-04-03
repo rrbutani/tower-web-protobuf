@@ -1,6 +1,5 @@
-
+use super::{Config, ProtobufService};
 use crate::common::*;
-use super::{ProtobufService, Config};
 
 use tower_web::middleware::Middleware;
 
@@ -12,7 +11,12 @@ pub struct ProtobufMiddleware {
 impl ProtobufMiddleware {
     /// Create a new `ProtobufMiddleware` instance with options.
     pub fn new(send_json: bool, receive_json: bool) -> ProtobufMiddleware {
-        ProtobufMiddleware { config: Config { send_json, receive_json }}
+        ProtobufMiddleware {
+            config: Config {
+                send_json,
+                receive_json,
+            },
+        }
     }
 }
 
@@ -24,8 +28,7 @@ impl Default for ProtobufMiddleware {
 
 impl<S, ReqBody, RespBody> Middleware<S> for ProtobufMiddleware
 where
-    S: Service<Request = HttpRequest<ReqBody>,
-               Response = HttpResponse<RespBody>>,
+    S: Service<Request = HttpRequest<ReqBody>, Response = HttpResponse<RespBody>>,
     S::Future: Future<Item = HttpResponse<RespBody>>,
     S::Error: ::std::error::Error,
 {
