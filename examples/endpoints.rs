@@ -1,6 +1,4 @@
 #[macro_use] extern crate tower_web;
-// #[macro_use] extern crate log;
-// #[macro_use(try_ready)] extern crate futures;
 extern crate tokio;
 extern crate tower_service;
 extern crate http;
@@ -18,17 +16,24 @@ pub mod interop {
     include!(concat!(env!("OUT_DIR"), "/interop.rs"));
 }
 
+use telemetry::CameraTelem;
 
-/// This type will be part of the web service as a resource.
 #[derive(Clone, Debug)]
 struct HelloWorld;
 
+type In<M> = Proto<M>;
+type Out<M> = Result<Proto<M>, ()>;
+
 impl_web! {
     impl HelloWorld {
+        #[get("/identity/pos/")]
+        fn pos_ident(&self, pos: In<CameraTelem>) -> Out<CameraTelem> {
+            Ok(pos)
+        }
+
         #[get("/return_pos/")]
-        fn name(&self, name: Proto<telemetry::Position>) -> Result<String, ()> {
-            Ok(format!("{}, {}", name.lat, name.lon))
-            // Ok(String::from("jk"))
+        fn name(&self, pos: Proto<telemetry::Position>) -> Result<String, ()> {
+            Ok(format!("{}, {}", pos.lat, pos.lon))
         }
     }
 }
