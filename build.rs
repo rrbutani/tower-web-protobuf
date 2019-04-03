@@ -16,8 +16,12 @@ fn proto_files_in_dir(dir: &'static str) -> Vec<PathBuf> {
 
 
 fn main() {
-    let mut prost_build = prost_build::Config::new();
-
-    prost_build.compile_protos(proto_files_in_dir(MESSAGE_DIR).as_slice(),
-        &[MESSAGE_DIR.into()]).unwrap();
+    prost_build::Config::new()
+        .type_attribute(".", "#[derive(Serialize, Deserialize)]")
+        .type_attribute(".", "#[serde(rename-all = \"snake_case\")]")
+        .type_attribute(".", "#[serde(deny_unknown_fields)]")
+        .compile_protos(
+            proto_files_in_dir(MESSAGE_DIR).as_slice(),
+            &[MESSAGE_DIR.into()]
+        ).unwrap();
 }
