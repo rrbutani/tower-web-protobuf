@@ -37,6 +37,6 @@ pub use types::Proto;
 pub use middleware::ProtobufMiddleware;
 
 // TODO: deny missing docs
-// TODO: stable
+// TODO: check protobuf message name with type_info (feature gated, perhaps)
 // TODO: with fork
 // TODO: fix Errors in Tower Web

@@ -56,6 +56,9 @@ fn parse_headers<T>(request: &HttpRequest<T>, header: HeaderName, allow_json: bo
         }
     }).next().unwrap_or((false, None));
 
+    // TODO: a lot more error handling here. For example, specifying multiple content types or
+    // multiple protobuf message types.
+
     // Note: for now we disregard message types in the content-type header, but
     // in the future we should ensure that this matches the type for the
     // endpoint we're hitting (TODO). This is a little tricky since we don't
@@ -66,7 +69,7 @@ fn parse_headers<T>(request: &HttpRequest<T>, header: HeaderName, allow_json: bo
         (_,     true, Some(name))  => { NamedProto(String::from(name)) },
         (_,     true, None)        => { Proto },
         (true,  false, _)          => { Json },
-        (false, false, _)          => { Plaintext },
+        (false, false, _)          => { Plaintext }, // TODO: this should actually error
     }
 }
 
@@ -77,7 +80,7 @@ where
     S::Future: Future<Item = HttpResponse<RespBody>>,
     S::Error: ::std::error::Error,
 {
-    type Request = S::Request; // HttpRequest<ReqBody>
+    type Request = S::Request;
     type Response = S::Response;
     type Error = S::Error;
     type Future = ResponseFuture<S::Future>;

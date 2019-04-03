@@ -9,7 +9,7 @@ use tower_web::Error as TowerError;
 pub enum DeserializeErrorKind {
     /// If a request specifies a content type other than JSON or Protobuf
     InvalidContentTypeForMessage,
-    // TODO:
+    // TODO: actually use..
     InvalidHeadersForMessage,
     // If we hit an error while trying to parse a message as JSON
     ErrorParsingJson,
@@ -26,10 +26,12 @@ pub struct DeserializeError {
 }
 
 impl DeserializeError {
+    #[allow(dead_code)]
     pub(crate) fn new(kind: DeserializeErrorKind) -> Self {
         Self { kind, err_message: None }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn new_with_message(kind: DeserializeErrorKind, message: String) -> Self {
         Self { kind, err_message: Some(message) }
     }
