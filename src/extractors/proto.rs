@@ -8,13 +8,13 @@ use tower_web::extract::Extract;
 use crate::common::*;
 use crate::types::{MessagePlus, Proto};
 use crate::errors::{DeserializeError, DeserializeErrorKind};
-use crate::extensions::MessageParseStrategy;
+use crate::extensions::{MessageParseStrategy, MessageStrategy};
 
 
 pub struct MessageFuture<B: BufStream, M: MessagePlus> {
     collect: Collect<B, Vec<u8>>,
     message: Option<M>,
-    strat: MessageParseStrategy,
+    parse_strat: MessageParseStrategy,
 }
 
 impl<B, M> Extract<B> for Proto<M>
@@ -34,22 +34,25 @@ where
 
     fn extract_body(ctx: &Context, body: B) -> Self::Future {
 
-        // We _should_ we trying to parse the message from the body:
+        // We _should_ be trying to parse the message from the body:
         // let source = ctx.callsite().source();
         // if source != tower_web::codegen::Source::Body {
         //     unimplemented!("Err: {:?}" ctx.callsite().source())
         // }
+        //
+        // Unfortunately since callsite().source() is private, we can't do the
+        // check above.
 
-        let strat = ctx.request().extensions().get::<MessageParseStrategy>();
-
-        // If the user isn't using the Middleware, they get strict Protobuf
-        // parsing regardless of the header:
-        let strat = strat.map(|p| *p).unwrap_or(MessageParseStrategy::Proto);
+        // If the user isn't using the Middleware, they get the Default:
+        let strat = ctx.request().extensions()
+            .get::<MessageParseStrategy>()
+            .map(|p| p.clone())
+            .unwrap_or_default();
 
         MessageFuture {
             collect: body.collect(),
             message: None,
-            strat
+            parse_strat: strat
         }
     }
 
@@ -61,32 +64,6 @@ where
     }
 }
 
-// impl<T, U> Future for Collect<T, U>
-// where
-//     T: BufStream,
-//     U: FromBufStream,
-// {
-//     type Item = U;
-//     type Error = T::Error;
-
-//     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-//         loop {
-//             match try_ready!(self.stream.poll()) {
-//                 Some(mut buf) => {
-//                     let builder = self.builder.as_mut().expect("cannot poll after done");
-
-//                     U::extend(builder, &mut buf);
-//                 }
-//                 None => {
-//                     let builder = self.builder.take().expect("cannot poll after done");
-//                     let value = U::build(builder);
-//                     return Ok(value.into());
-//                 }
-//             }
-//         }
-//     }
-// }
-
 impl<B: BufStream, M: MessagePlus> ExtractFuture for MessageFuture<B, M> {
     type Item = Proto<M>;
 
@@ -97,19 +74,29 @@ impl<B: BufStream, M: MessagePlus> ExtractFuture for MessageFuture<B, M> {
 
         let bytes: Vec<u8> = try_ready!(resp);
 
-        let msg_res: Result<M, DeserializeError> = match self.strat {
-            MessageParseStrategy::Proto => {
+        let msg_res: Result<M, DeserializeError> = match *self.parse_strat {
+            MessageStrategy::NamedProto(ref name) => {
+                // TODO: check message name
                 M::decode(bytes)
-                    .map_err(|e| DeserializeError::new_with_message(DeserializeErrorKind::ErrorParsingProtobuf, e.to_string()))
+                    .map_err(|e| DeserializeError::new_with_error(DeserializeErrorKind::ErrorParsingProtobuf, e))
+            }
+
+            MessageStrategy::Proto => {
+                M::decode(bytes)
+                    .map_err(|e| DeserializeError::new_with_error(DeserializeErrorKind::ErrorParsingProtobuf, e))
             },
-            MessageParseStrategy::Json => {
-                unimplemented!()
+            MessageStrategy::Json => {
+                serde_json::from_slice(&bytes)
+                    .map_err(|e| DeserializeError::new_with_error(DeserializeErrorKind::ErrorParsingJson, e))
             },
-            MessageParseStrategy::None => {
-                unimplemented!()
+            MessageStrategy::Plaintext => {
+                serde_plain::from_str(
+                    String::from_utf8(bytes)
+                        .map_err(|e| Error::invalid_argument(&e))?
+                        .as_str())
+                    .map_err(|e| DeserializeError::new_with_error(DeserializeErrorKind::ErrorParsingPlaintext, e))
             }
         };
-
 
         match msg_res {
             Ok(msg) => {

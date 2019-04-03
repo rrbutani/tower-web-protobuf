@@ -1,7 +1,4 @@
-// TODO: deny missing docs
-// TODO: stable
-// TODO: with fork
-// TODO: fix Errors in Tower Web
+#[deny(missing_docs)]
 
 #[macro_use(try_ready)] extern crate futures;
 
@@ -29,12 +26,17 @@ pub(crate) mod common {
     }
 }
 
-pub mod config;
 pub mod errors;
 pub mod extensions;
 pub mod extractors;
 pub mod middleware;
+pub mod response;
 pub mod types;
 
 pub use types::Proto;
 pub use middleware::ProtobufMiddleware;
+
+// TODO: deny missing docs
+// TODO: stable
+// TODO: with fork
+// TODO: fix Errors in Tower Web

@@ -2,6 +2,7 @@ use std::convert::{From, Into};
 use std::ops::Deref;
 
 use prost::Message;
+use serde::{de::DeserializeOwned, Serialize};
 
 /// A wrapper struct for a protobuf message type.
 ///
@@ -39,9 +40,9 @@ use prost::Message;
 pub struct Proto<M: MessagePlus>(pub M);
 
 /// A thin trait alias to make stuff more legible.
-pub trait MessagePlus: Message + Default {}
-impl<M: Message + Default> MessagePlus for M {}
-// trait MessagePlus = Message + Default; // For when RFC 1733 lands
+pub trait MessagePlus: Message + DeserializeOwned + Serialize + Default {}
+impl<M: Message + DeserializeOwned + Serialize + Default> MessagePlus for M {}
+// trait MessagePlus = Message + DeserializeOwned + Serialize + Default; // For when RFC 1733 lands
 
 impl<M: MessagePlus> Default for Proto<M> {
     fn default() -> Self {

@@ -15,6 +15,8 @@ pub enum DeserializeErrorKind {
     ErrorParsingJson,
     // If we hit an error while trying to parse a message as a Protobuf message
     ErrorParsingProtobuf,
+    // If we hit an error while trying to parse a message as Plaintext
+    ErrorParsingPlaintext,
 }
 
 #[derive(Clone, Debug)]
@@ -32,12 +34,17 @@ impl DeserializeError {
         Self { kind, err_message: Some(message) }
     }
 
+    pub(crate) fn new_with_error<T: Display>(kind: DeserializeErrorKind, err: T) -> Self {
+        Self { kind, err_message: Some(format!("{}", err)) }
+    }
+
     pub(crate) fn get_code_and_message(&self) -> (u16, String) {
         use DeserializeErrorKind::*;
 
         let (status, msg) = match &self.kind {
             InvalidHeadersForMessage => (415, "TODO"),
             InvalidContentTypeForMessage => (415, "TODO"),
+            ErrorParsingPlaintext => (415, "TODO"),
             ErrorParsingProtobuf => (415, "TODO"),
             ErrorParsingJson => (415, "TODO"),
         };
