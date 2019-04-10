@@ -3,8 +3,12 @@
 #[macro_use] extern crate prost;
 #[macro_use] extern crate tower_web;
 
-use tower_web_protobuf::Proto;
+use std::sync::Mutex;
 use std::collections::HashMap;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+use tower_web::ServiceBuilder;
+use tower_web_protobuf::{Proto, ProtobufMiddleware};
 
 // Messages:
 
@@ -42,21 +46,22 @@ pub enum AlbumType {
 
 // A silly service:
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct MusicService {
-    db: HashMap<String, Album>,
+    db: Mutex<HashMap<String, Album>>,
 }
 
 impl MusicService {
     fn new() -> Self {
         Self {
-            db: HashMap::new()
+            db: Mutex::new(HashMap::new()),
         }
     }
 }
 
 type In<M> = Proto<M>;
 type Out<M> = Result<Proto<M>, ()>;
+type Res<M, E> = Result<Proto<M>, E>;
 
 impl_web! {
     impl MusicService {
@@ -66,14 +71,40 @@ impl_web! {
         #[get("/identity/album/")]
         fn album_ident(&self, album: In<Album>) -> Out<Album> { Ok(album) }
 
-        #[get("/add/album/")]
-        fn add_album(&mut self, album: In<Album>) -> Result<Proto<Album>, String> {
-            self.db.insert(album.name, album.into())
+        #[post("/add/album/")]
+        fn add_album(&self, album: In<Album>) -> Res<Album, String> {
+            self.db.lock()
+                .unwrap()
+                .insert(album.name.clone(), album.move_inner())
                 .map(|a| a.into())
                 .ok_or("This is a new album!".into())
+        }
+
+        #[get("/query/album/:album_name")]
+        fn get_album(&self, album_name: String) -> Res<Album, String> {
+            self.db.lock()
+                .unwrap()
+                .get(&album_name)
+                .map(|a| a.clone().into())
+                .ok_or("No such album found!".into())
+        }
+
+        #[get("/track/length/")]
+        fn track_length(&self, track: In<Track>) -> Result<String, ()> {
+            Ok(format!("{}", track.length))
         }
     }
 }
 
+// Some handy helper functions:
 
+fn setup(options: (bool, bool)) {
+    let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+    let socket = SocketAddr::new(ip, 0);
 
+    ServiceBuilder::new()
+        .resource(MusicService::new())
+        .middleware(ProtobufMiddleware::new(options.0, options.1))
+        .run(&socket)
+        .unwrap()
+}
