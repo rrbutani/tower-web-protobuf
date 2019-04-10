@@ -8,6 +8,18 @@ pub(crate) enum MessageStrategy {
     Plaintext,
 }
 
+impl MessageStrategy {
+    pub(crate) fn content_type(&self) -> &'static str {
+        use MessageStrategy::*;
+
+        match *self {
+            NamedProto(_) | Proto => "application/protobuf",
+            Json => "application/json",
+            Plaintext => "text/plain",
+        }
+    }
+}
+
 // Extensions rely on TypeIds and simple aliases appear to have the same TypeId
 // as the things they alias, so we'll (ab)use the newtype pattern:
 #[derive(Clone, Debug)]

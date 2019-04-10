@@ -124,12 +124,15 @@ where
 
         let buf = buf.freeze();
 
-        http::Response::builder().body(buf.into()).map_err(|err| {
-            Error::new(
-                &format!("{}", err),
-                "Response Builder Error",
-                StatusCode::INTERNAL_SERVER_ERROR,
-            )
-        })
+        http::Response::builder()
+            .header("Content-Type", strat.content_type())
+            .body(buf.into())
+            .map_err(|err| {
+                Error::new(
+                    &format!("{}", err),
+                    "Response Builder Error",
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                )
+            })
     }
 }
