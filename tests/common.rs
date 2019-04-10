@@ -1,44 +1,36 @@
 //! Some auxiliary stuff for end-to-end tests:
 
-#[macro_use] extern crate prost;
-#[macro_use] extern crate tower_web;
-
-use tower_web::routing::ResourceFuture;
-use tower_web::util::BufStream;
-use http::Response;
-use http::Request;
-use tower_service::Service;
-use tower_web::codegen::futures::Future;
-use tower_service::NewService;
-
+use std::collections::HashMap;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
 use std::panic;
 use std::sync::Mutex;
-use std::collections::HashMap;
 
+use ::prost::{Enumeration, Message};
 use tower_web::ServiceBuilder;
+use tower_web::{impl_web, Deserialize, Serialize, *};
 use tower_web_protobuf::{Proto, ProtobufMiddleware};
 
 // Messages:
 
 #[derive(Clone, PartialEq, Message, Serialize, Deserialize)]
 pub struct Track {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     pub name: String,
     #[prost(float)]
     pub length: f32,
-    #[prost(float)]
-    pub number: f32,
+    #[prost(uint32)]
+    pub number: u32,
     #[prost(uint32)]
     pub id: u32,
 }
 
 #[derive(Clone, PartialEq, Message, Serialize, Deserialize)]
 pub struct Album {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     pub name: String,
     #[prost(uint32)]
     pub id: u32,
-    #[prost(enumeration="AlbumType")]
+    #[prost(enumeration = "AlbumType")]
     pub album_type: i32,
     #[prost(message, repeated)]
     pub tracks: Vec<Track>,
@@ -46,10 +38,10 @@ pub struct Album {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Enumeration, Serialize, Deserialize)]
 pub enum AlbumType {
-  Single = 0,
-  Ep = 1,
-  Lp = 2,
-  Playlist = 3, // 🙄
+    Single = 0,
+    Ep = 1,
+    Lp = 2,
+    Playlist = 3, // 🙄
 }
 
 // A silly service:
@@ -106,21 +98,31 @@ impl_web! {
 
 // Some handy helper functions:
 
-fn run_service_test<Req: BufStream, Resp: BufStream>(options: (bool, bool), req: impl FnOnce() -> Request<Req>, resp: impl FnOnce(Response<Resp>)) {
-    let service = ServiceBuilder::new()
+fn setup(options: (bool, bool), socket: &SocketAddr) {
+    ServiceBuilder::new()
         .resource(MusicService::new())
         .middleware(ProtobufMiddleware::new(options.0, options.1))
-        .build_new_service()
-        .new_service()
-        .wait()
+        .run(&socket)
         .unwrap();
+}
 
-    let result = panic::catch_unwind(|| {
-        let () = service.call(req()).poll_response().wait();
+fn get_next_unused_port() -> Option<u16> {
+    (1025..65535).find(|p| TcpListener::bind(("127.0.0.1", *p)).is_ok())
+}
 
-    });
+pub fn run_service_test(
+    options: (bool, bool),
+    test_fn: impl FnOnce(&SocketAddr) + panic::UnwindSafe,
+) {
+    // Setup:
+    let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+    let socket = SocketAddr::new(ip, get_next_unused_port().unwrap());
 
-    // Teardown (in case we need to do any teardown in the future)
+    std::thread::spawn(move || setup(options, &socket));
 
-    assert!(result.is_ok());
+    let result = panic::catch_unwind(|| test_fn(&socket));
+
+    // <teardown>
+
+    assert!(result.is_ok())
 }
