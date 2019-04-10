@@ -3,9 +3,17 @@
 #[macro_use] extern crate prost;
 #[macro_use] extern crate tower_web;
 
+use tower_web::routing::ResourceFuture;
+use tower_web::util::BufStream;
+use http::Response;
+use http::Request;
+use tower_service::Service;
+use tower_web::codegen::futures::Future;
+use tower_service::NewService;
+
+use std::panic;
 use std::sync::Mutex;
 use std::collections::HashMap;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use tower_web::ServiceBuilder;
 use tower_web_protobuf::{Proto, ProtobufMiddleware};
@@ -98,13 +106,21 @@ impl_web! {
 
 // Some handy helper functions:
 
-fn setup(options: (bool, bool)) {
-    let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
-    let socket = SocketAddr::new(ip, 0);
-
-    ServiceBuilder::new()
+fn run_service_test<Req: BufStream, Resp: BufStream>(options: (bool, bool), req: impl FnOnce() -> Request<Req>, resp: impl FnOnce(Response<Resp>)) {
+    let service = ServiceBuilder::new()
         .resource(MusicService::new())
         .middleware(ProtobufMiddleware::new(options.0, options.1))
-        .run(&socket)
-        .unwrap()
+        .build_new_service()
+        .new_service()
+        .wait()
+        .unwrap();
+
+    let result = panic::catch_unwind(|| {
+        let () = service.call(req()).poll_response().wait();
+
+    });
+
+    // Teardown (in case we need to do any teardown in the future)
+
+    assert!(result.is_ok());
 }
