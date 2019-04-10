@@ -11,7 +11,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// This has to exist because `impl<T> Trait for T` requires T to be 'covered'
 /// by a local type (i.e. Proto<T>), when Self is used (I think). Self _is_
 /// used by Extract (Future: ExtractFuture<Item = Self>) which I think is why:
-/// ```
+/// ```compile_fail
 /// impl<M, B: BufStream> Extract<B> for M
 /// where
 ///     M: 'static + Message + MessageWrapper<M>

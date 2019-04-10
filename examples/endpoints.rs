@@ -17,7 +17,7 @@ pub mod interop {
     include!(concat!(env!("OUT_DIR"), "/interop.rs"));
 }
 
-use telemetry::CameraTelem;
+use telemetry::{CameraTelem, Position};
 
 #[derive(Clone, Debug)]
 struct HelloWorld;
@@ -33,7 +33,7 @@ impl_web! {
         }
 
         #[get("/return_pos/")]
-        fn name(&self, pos: Proto<telemetry::Position>) -> Result<String, ()> {
+        fn name(&self, pos: In<Position>) -> Result<String, ()> {
             Ok(format!("{}, {}", pos.lat, pos.lon))
         }
     }
