@@ -1,4 +1,6 @@
-use std::convert::{From, Into};
+use core::fmt::Formatter;
+use std::convert::From;
+use std::fmt::Debug;
 use std::ops::Deref;
 
 use prost::Message;
@@ -51,8 +53,8 @@ impl<M: MessagePlus> Default for Proto<M> {
 }
 
 impl<M: MessagePlus> Proto<M> {
-    pub fn message(&self) -> &M {
-        &self.0
+    pub fn move_inner(self) -> M {
+        self.0
     }
 
     pub fn new(message: M) -> Self {
@@ -84,5 +86,23 @@ impl<M: MessagePlus> Deref for Proto<M> {
 
     fn deref(&self) -> &M {
         &self.0
+    }
+}
+
+impl<M: MessagePlus> AsRef<M> for Proto<M> {
+    fn as_ref(&self) -> &M {
+        self.deref()
+    }
+}
+
+impl<M: MessagePlus + Debug> Debug for Proto<M> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), core::fmt::Error> {
+        self.0.fmt(f)
+    }
+}
+
+impl<M: MessagePlus + Clone> Clone for Proto<M> {
+    fn clone(&self) -> Self {
+        Self(M::clone(&self.0))
     }
 }
