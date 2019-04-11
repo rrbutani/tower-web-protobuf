@@ -1,8 +1,12 @@
 [package]
 name = "tower-web-protobuf"
+description = "Middleware and friends for tower-web that help with Protobufs"
 version = "0.1.0"
 authors = ["Rahul Butani <rr.butani@gmail.com>"]
 edition = "2018"
+repository = "https://github.com/rrbutani/tower-web-protobuf.git"
+license = "MIT"
+readme = "README.md"
 
 [dependencies]
 tower-web = "0.3.6"

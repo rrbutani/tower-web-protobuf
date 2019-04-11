@@ -1,0 +1,69 @@
+language: rust
+cache: cargo
+
+rust:
+  - stable
+  - beta
+  - nightly
+  - 1.34.0
+
+install:
+  - rustup component add rustfmt-preview clippy-preview || true
+
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
+# The test stage:
+script:
+  - cargo build --verbose --all
+  - cargo test --verbose --all
+
+jobs:
+  allow_failures:
+    - script: cargo coveralls
+  include:
+    - stage: format
+      rust: stable
+      script: cargo fmt --all -- --check && cargo clippy
+
+    - stage: deploy
+      rust: stable
+      # Unfortunately, due to kcov, ASLR, and Spectre/Meltdown
+      # precautions this is required.
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - libcurl4-openssl-dev
+            - libelf-dev
+            - libdw-dev
+            - binutils-dev
+            - cmake
+          sources:
+            - kalakris-cmake
+      before_script: |
+        export PATH=$HOME/.cargo/bin:$PATH;
+        cargo install cargo-update || true;
+        cargo install cargo-travis || true;
+        cargo install-update -a
+      script: cargo coveralls
+
+    - stage: deploy
+      rust: stable
+      script: cargo doc --all --release
+      deploy:
+        provider: pages
+        local-dir: target/doc/
+        project-name: tower-web-protobuf
+        target-branch: gh-pages
+        skip-cleanup: true
+        github-token: $GITHUB_TOKEN
+        keep-history: true
+
+stages:
+  - test
+  - format
+  - name: deploy
+    if: branch = master
