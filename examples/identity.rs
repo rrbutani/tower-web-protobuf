@@ -37,9 +37,9 @@ pub fn main() {
 
     ServiceBuilder::new()
         .resource(HelloWorld)
-        .middleware(ProtobufMiddleware::new(true, true))
         // (true, true) permits JSON decoding (requests) and encoding
         // (responses)
+        .middleware(ProtobufMiddleware::new(true, true))
         .run(&addr)
         .unwrap();
 }
