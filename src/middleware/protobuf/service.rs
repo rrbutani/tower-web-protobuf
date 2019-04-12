@@ -20,6 +20,7 @@ pub struct Config {
 ///
 /// If both JSON (`application/json`) and Protobuf (`application/x-protobuf`)
 /// Accept headers are set, Protobuf will be preferred.
+#[derive(Debug)]
 pub struct ProtobufService<S> {
     inner: S,
     config: Config,
@@ -41,7 +42,7 @@ fn parse_headers<T>(
     // We're going to be strict about having the right header for JSON:
     let json = content_type_headers
         .iter()
-        .any(|h| h == &"application/json");
+        .any(|h| h == "application/json");
 
     // But somewhat lenient for Protobufs since there isn't an official
     // thing. We'll take: "application/[x-]protobuf[; <message type>]".
@@ -52,7 +53,7 @@ fn parse_headers<T>(
                 let p = x.starts_with("application/protobuf")
                     || x.starts_with("application/x-protobuf");
 
-                let pair = (p, if p { x.split(";").next() } else { None });
+                let pair = (p, if p { x.split(';').next() } else { None });
 
                 Some(pair)
             }

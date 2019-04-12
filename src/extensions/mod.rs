@@ -1,3 +1,5 @@
+//! Types and friends used to record internal state tied to incoming requests.
+
 use std::ops::Deref;
 
 #[derive(Clone, Debug)]

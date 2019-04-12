@@ -2,4 +2,4 @@
 
 mod deserialize_error;
 
-pub use deserialize_error::{DeserializeError, DeserializeErrorKind};
+pub(crate) use deserialize_error::{DeserializeError, DeserializeErrorKind};

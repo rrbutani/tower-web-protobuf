@@ -4,6 +4,7 @@ use crate::common::*;
 use tower_web::middleware::Middleware;
 
 /// Decorate a service by converting incoming and outgoing Protobuf messages.
+#[derive(Debug)]
 pub struct ProtobufMiddleware {
     config: Config,
 }

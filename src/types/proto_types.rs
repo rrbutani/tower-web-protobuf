@@ -53,10 +53,13 @@ impl<M: MessagePlus> Default for Proto<M> {
 }
 
 impl<M: MessagePlus> Proto<M> {
+    /// Unwraps the message (of type M) from it's Proto<M> container, consuming
+    /// the container in the process.
     pub fn move_inner(self) -> M {
         self.0
     }
 
+    /// Creates a new Proto<M> instance from a message of type M.
     pub fn new(message: M) -> Self {
         Proto::<M>(message)
     }

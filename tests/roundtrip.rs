@@ -8,7 +8,7 @@ use common::*;
 use reqwest::{Client, StatusCode};
 use std::io::Read;
 use std::net::SocketAddr;
-use tower_web_protobuf::types::MessagePlus;
+use tower_web_protobuf::MessagePlus;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum Format {

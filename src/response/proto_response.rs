@@ -20,6 +20,7 @@ use crate::types::Proto;
 
 // Let's make a newtype around Bytes:
 #[doc(hidden)]
+#[derive(Debug)]
 pub struct BytesWrapper(Bytes);
 
 impl Deref for BytesWrapper {
@@ -94,7 +95,7 @@ where
             .request()
             .extensions()
             .get()
-            .map(|s: &MessageEncodeStrategy| s.clone())
+            .cloned()
             .unwrap_or_default();
         let buf = match *strat {
             NamedProto(ref name) => {

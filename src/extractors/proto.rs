@@ -10,6 +10,7 @@ use crate::errors::{DeserializeError, DeserializeErrorKind};
 use crate::extensions::{MessageParseStrategy, MessageStrategy};
 use crate::types::{MessagePlus, Proto};
 
+#[derive(Debug)]
 pub struct MessageFuture<B: BufStream, M: MessagePlus> {
     collect: Collect<B, Vec<u8>>,
     message: Option<M>,
@@ -46,7 +47,7 @@ where
             .request()
             .extensions()
             .get::<MessageParseStrategy>()
-            .map(|p| p.clone())
+            .cloned()
             .unwrap_or_default();
 
         MessageFuture {
@@ -58,8 +59,7 @@ where
 
     // TODO: make sure this is enforced..
     // Protobuf messages can only be extracted from a request body for now.
-    fn requires_body(callsite: &CallSite) -> bool {
-        drop(callsite);
+    fn requires_body(_: &CallSite) -> bool {
         true
     }
 }

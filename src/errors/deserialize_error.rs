@@ -5,21 +5,23 @@ use tower_web::error::IntoCatch; // TODO
 use tower_web::Error as TowerError;
 
 #[derive(Clone, Debug)]
-pub enum DeserializeErrorKind {
+/// Represents errors encountered when attempting to deserialize a message
+pub(crate) enum DeserializeErrorKind {
     /// If a request specifies a content type other than JSON or Protobuf
     InvalidContentTypeForMessage,
-    // TODO: actually use..
+    /// TODO: actually use..
     InvalidHeadersForMessage,
-    // If we hit an error while trying to parse a message as JSON
+    /// If we hit an error while trying to parse a message as JSON
     ErrorParsingJson,
-    // If we hit an error while trying to parse a message as a Protobuf message
+    /// If we hit an error while trying to parse a message as a Protobuf message
     ErrorParsingProtobuf,
-    // If we hit an error while trying to parse a message as Plaintext
+    /// If we hit an error while trying to parse a message as Plaintext
     ErrorParsingPlaintext,
 }
 
 #[derive(Clone, Debug)]
-pub struct DeserializeError {
+/// Represents an error encountered while attempting to deserialize a message
+pub(crate) struct DeserializeError {
     kind: DeserializeErrorKind,
     err_message: Option<String>,
 }
