@@ -1,0 +1,13 @@
+/*
+ * A quick and dirty sample message.
+ */
+
+syntax = "proto3";
+
+package telemetry;
+
+// WGS84 in degrees
+message Position {
+    double lat = 1;
+    double lon = 2;
+}

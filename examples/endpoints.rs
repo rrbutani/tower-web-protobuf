@@ -13,11 +13,7 @@ pub mod telemetry {
     include!(concat!(env!("OUT_DIR"), "/telemetry.rs"));
 }
 
-pub mod interop {
-    include!(concat!(env!("OUT_DIR"), "/interop.rs"));
-}
-
-use telemetry::{CameraTelem, Position};
+use telemetry::Position;
 
 #[derive(Clone, Debug)]
 struct HelloWorld;
@@ -28,7 +24,7 @@ type Out<M> = Result<Proto<M>, ()>;
 impl_web! {
     impl HelloWorld {
         #[get("/identity/pos/")]
-        fn pos_ident(&self, pos: In<CameraTelem>) -> Out<CameraTelem> {
+        fn pos_ident(&self, pos: In<Position>) -> Out<Position> {
             Ok(pos)
         }
 
