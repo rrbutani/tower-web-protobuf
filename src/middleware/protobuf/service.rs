@@ -40,9 +40,7 @@ fn parse_headers<T>(
     let content_type_headers = request.headers().get_all(header);
 
     // We're going to be strict about having the right header for JSON:
-    let json = content_type_headers
-        .iter()
-        .any(|h| h == "application/json");
+    let json = content_type_headers.iter().any(|h| h == "application/json");
 
     // But somewhat lenient for Protobufs since there isn't an official
     // thing. We'll take: "application/[x-]protobuf[; <message type>]".

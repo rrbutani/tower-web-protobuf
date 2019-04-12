@@ -40,7 +40,7 @@ pub(crate) mod response;
 pub(crate) mod types;
 
 pub use middleware::ProtobufMiddleware;
-pub use types::{Proto, MessagePlus};
+pub use types::{MessagePlus, Proto};
 
 // TODO: deny missing docs
 // TODO: check protobuf message name with type_info (feature gated, perhaps)
