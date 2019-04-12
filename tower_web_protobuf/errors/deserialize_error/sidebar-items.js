@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["DeserializeErrorKind","Represents errors encountered when attempting to deserialize a message"]],"struct":[["DeserializeError","Represents an error encountered while attempting to deserialize a message"]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["parse_headers",""]],"struct":[["Config","Configuration options for a `ProtobufService`."],["ProtobufService","Decorates another Service by parsing incoming Protobuf messages and serializing outgoing Protobuf messages."]]});

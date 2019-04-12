@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DeflateMiddleware","Deflate all response bodies"],["DeflateService","Deflates the inner service's response bodies."],["ResponseFuture","Deflate the response body."]]});

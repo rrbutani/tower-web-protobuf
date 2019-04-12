@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ExtractOptionFuture","Extract an `Option` value from an HTTP request."]]});

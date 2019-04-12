@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ProtobufMiddleware","Decorate a service by converting incoming and outgoing Protobuf messages."]]});

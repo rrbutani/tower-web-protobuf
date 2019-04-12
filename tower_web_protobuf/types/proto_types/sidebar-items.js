@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Proto","A wrapper struct for a protobuf message type."]],"trait":[["MessagePlus","A thin trait alias to make stuff more legible."]]});

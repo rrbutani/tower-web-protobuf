@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["cors","CORS middleware."],["deflate","Middleware that deflates HTTP response bodies"],["log","Middleware that creates a log entry for each HTTP request."]],"struct":[["Chain","Two middlewares chained together."],["Identity","A no-op middleware."]],"trait":[["Middleware","Decorates a `Service`, transforming either the request or the response."]]});

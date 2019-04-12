@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Config","A type of application level configuration."]]});

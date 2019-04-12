@@ -1,0 +1,1 @@
+initSidebarItems({"derive":[["Extract",""],["Response",""],["derive_resource_impl","Implement a Web Service"]]});

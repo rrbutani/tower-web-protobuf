@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CompressStream","Compress a buf stream using zlib deflate."],["Error","Errors returned by `CompressStream`."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["LogMiddleware","Decorate a service by logging all received requests."],["LogService","Decorates a service by logging all received requests"],["ResponseFuture","Log the received request once the response has been processed."]]});

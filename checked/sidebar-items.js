@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Checked","The Checked type. See the module level documentation for more."]]});

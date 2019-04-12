@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["AllowedOrigins","Specifies which origins are allowed to access this resource"]],"struct":[["CorsBuilder","Build a configured CORS middleware instance."],["CorsMiddleware","Middleware providing an implementation of the CORS specification."],["CorsService","Decorates a service, providing an implementation of the CORS specification."]]});

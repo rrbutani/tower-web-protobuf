@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["LiftFuture","Contains an `HttpFuture` providing an implementation of `Future`."],["LiftService","Contains an `HttpService` providing an implementation of `Service`."]],"trait":[["HttpFuture","HTTP response future trait"],["HttpMiddleware","HTTP middleware trait"],["HttpService","An HTTP service"],["NewHttpService","Creates `HttpService` values."]]});

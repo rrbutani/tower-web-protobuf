@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Builder","Build a `SizeHint`"],["SizeHint","A `BufStream` size hint"]]});
