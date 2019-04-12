@@ -52,7 +52,7 @@ jobs:
 
     - stage: deploy
       rust: stable
-      script: cargo doc --all --release
+      script: cargo doc --all --release --document-private-items --all-features
       deploy:
         provider: pages
         local-dir: target/doc/
