@@ -66,4 +66,4 @@ stages:
   - test
   - format
   - name: deploy
-    if: branch = master
+    if: branch = main
