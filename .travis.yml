@@ -5,7 +5,7 @@ rust:
   - stable
   - beta
   - nightly
-  - 1.34.0
+  - 1.36.0
 
 install:
   - rustup component add rustfmt-preview clippy-preview || true
